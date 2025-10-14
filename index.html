@@ -95,8 +95,27 @@
       const folderName = getUrlParameter("folderName") || "";
       const userName = getUrlParameter("nome");
       const userCpf = getUrlParameter("cpf");
+      const driveType = getUrlParameter("drive"); // "preparatorio" ou "treinamentos"
 
-      console.log("Parâmetros obtidos:", { folderName, userName, userCpf });
+      console.log("Parâmetros obtidos:", {
+        folderName,
+        userName,
+        userCpf,
+        driveType,
+      });
+
+      // Determinar a URL base baseada no parâmetro drive
+      function getBaseUrl() {
+        if (driveType === "treinamentos") {
+          return "https://n8n.convet.com.br/webhook/treinamentos/";
+        } else {
+          // Padrão é "preparatorio"
+          return "https://n8n.convet.com.br/webhook/preparatorio/";
+        }
+      }
+
+      const baseUrl = getBaseUrl();
+      console.log("URL base selecionada:", baseUrl);
 
       function formatDate(dateString) {
         const options = { day: "2-digit", month: "2-digit", year: "numeric" };
@@ -115,9 +134,14 @@
 
       async function fetchPdfFiles() {
         console.log("Buscando arquivos na pasta:", folderName);
+        console.log(
+          "Usando URL:",
+          `${baseUrl}folder-files?folderName=${encodeURIComponent(folderName)}`
+        );
+
         try {
           const res = await fetch(
-            `https://n8n.convet.com.br/webhook/folder-files?folderName=${encodeURIComponent(
+            `${baseUrl}folder-files?folderName=${encodeURIComponent(
               folderName
             )}`
           );
@@ -198,14 +222,11 @@
           userName
         );
         try {
-          const res = await fetch(
-            "https://n8n.convet.com.br/webhook/watermark",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ folderId, name: userName, cpf: userCpf }),
-            }
-          );
+          const res = await fetch(`${baseUrl}watermark`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ folderId, name: userName, cpf: userCpf }),
+          });
 
           if (!res.ok) {
             throw new Error(`HTTP error! status: ${res.status}`);
