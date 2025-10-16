@@ -16,6 +16,12 @@
         padding: 20px;
         color: #333;
       }
+      body.waiting {
+        cursor: wait !important;
+      }
+      body.blocked * {
+        pointer-events: none !important;
+      }
       .container {
         max-width: 1200px;
         margin: 0 auto;
@@ -84,6 +90,8 @@
     <script>
       // Variável global para o elemento
       let cardsGrid;
+      // Variável para controlar o estado de download
+      let isDownloading = false;
 
       // Função para obter parâmetros da URL
       function getUrlParameter(name) {
@@ -130,6 +138,16 @@
       function extractFileId(url) {
         const match = url.match(/\/d\/([^\/]+)/);
         return match ? match[1] : null;
+      }
+
+      // Função para ativar/desativar o estado de bloqueio
+      function setDownloadState(downloading) {
+        isDownloading = downloading;
+        if (downloading) {
+          document.body.classList.add("waiting", "blocked");
+        } else {
+          document.body.classList.remove("waiting", "blocked");
+        }
       }
 
       async function fetchPdfFiles() {
@@ -206,6 +224,11 @@
           `;
 
           card.addEventListener("click", () => {
+            // Verifica se já está em processo de download
+            if (isDownloading) {
+              console.log("Download em andamento, clique bloqueado");
+              return;
+            }
             console.log("Download com watermark:", file.name);
             downloadWithWatermark(file.id);
           });
@@ -215,6 +238,9 @@
       }
 
       async function downloadWithWatermark(folderId) {
+        // Ativa o estado de bloqueio
+        setDownloadState(true);
+
         console.log(
           "Iniciando download com watermark para folderId:",
           folderId,
@@ -238,6 +264,9 @@
         } catch (error) {
           console.error("Erro no download:", error);
           alert("Erro ao gerar PDF com marca d'água.");
+        } finally {
+          // Desativa o estado de bloqueio independentemente do resultado
+          setDownloadState(false);
         }
       }
 
