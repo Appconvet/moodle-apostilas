@@ -230,23 +230,16 @@
               return;
             }
             console.log("Download com watermark:", file.name);
-            downloadWithWatermark(file.id);
+            downloadWithWatermark(file.id, file.name);
           });
 
           cardsGrid.appendChild(card);
         });
       }
 
-      async function downloadWithWatermark(folderId) {
-        // Ativa o estado de bloqueio
+      async function downloadWithWatermark(folderId, fileName) {
         setDownloadState(true);
 
-        console.log(
-          "Iniciando download com watermark para folderId:",
-          folderId,
-          userCpf,
-          userName
-        );
         try {
           const res = await fetch(`${baseUrl}watermark`, {
             method: "POST",
@@ -254,18 +247,30 @@
             body: JSON.stringify({ folderId, name: userName, cpf: userCpf }),
           });
 
-          if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`);
+          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+          // Método alternativo: converter para blob diretamente
+          const blob = await res.blob();
+
+          if (blob.size === 0) {
+            throw new Error("Arquivo veio vazio do servidor");
           }
 
-          const blob = await res.blob();
-          const url = URL.createObjectURL(blob);
-          window.open(url, "_blank");
+          console.log("Blob size:", blob.size);
+
+          // Força o download imediatamente
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${fileName.replace(/\.pdf$/i, "")}_watermark.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
         } catch (error) {
-          console.error("Erro no download:", error);
-          alert("Erro ao gerar PDF com marca d'água.");
+          console.error("Erro:", error);
+          alert(`Falha no download: ${error.message}`);
         } finally {
-          // Desativa o estado de bloqueio independentemente do resultado
           setDownloadState(false);
         }
       }
