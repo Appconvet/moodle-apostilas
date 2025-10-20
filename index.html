@@ -117,7 +117,6 @@
         if (driveType === "treinamentos") {
           return "https://n8n.convet.com.br/webhook/treinamentos/";
         } else {
-          // Padrão é "preparatorio"
           return "https://n8n.convet.com.br/webhook/preparatorio/";
         }
       }
@@ -128,11 +127,6 @@
       function formatDate(dateString) {
         const options = { day: "2-digit", month: "2-digit", year: "numeric" };
         return new Date(dateString).toLocaleDateString("pt-BR", options);
-      }
-
-      function getThumbnailUrl(fileId) {
-        console.log("Gerando thumbnail para fileId:", fileId);
-        return `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`;
       }
 
       function extractFileId(url) {
@@ -147,6 +141,28 @@
           document.body.classList.add("waiting", "blocked");
         } else {
           document.body.classList.remove("waiting", "blocked");
+        }
+      }
+
+      async function loadThumbnail(card, fileId, fileName) {
+        try {
+          const response = await fetch(`${baseUrl}thumbnail`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ fileId: fileId }),
+          });
+
+          const data = await response.json();
+
+          if (data[0] && data[0].thumbnailUrl) {
+            const thumbnailDiv = card.querySelector(".thumbnail");
+            thumbnailDiv.innerHTML = `<img src="${data[0].thumbnailUrl}" alt="${fileName}" 
+                onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\"pdf-icon\"></div>`;
+          }
+        } catch (error) {
+          console.warn("Erro ao carregar thumbnail:", error);
         }
       }
 
@@ -210,24 +226,20 @@
           card.setAttribute("data-id", file.id);
 
           card.innerHTML = `
-            <div class="thumbnail">
-              <img src="${getThumbnailUrl(fileId)}" alt="${file.name}">
-            </div>
-            <div class="card-content">
-              <div class="card-title" title="${file.name}">${file.name}</div>
-              <div class="card-details">
+        <div class="thumbnail">
+            <div class="pdf-icon"></div> <!-- Placeholder -->
+        </div>
+        <div class="card-content">
+            <div class="card-title" title="${file.name}">${file.name}</div>
+            <div class="card-details">
                 <span>${formatDate(file.modifiedTime)}</span>
                 <span>PDF</span>
-              </div>
             </div>
-          `;
+        </div>
+    `;
 
-          // Adiciona o event listener para erro de imagem DEPOIS de criar o elemento
-          const img = card.querySelector("img");
-          img.onerror = function () {
-            this.style.display = "none";
-            this.parentElement.innerHTML = '<div class="pdf-icon"></div>';
-          };
+          // Carrega a thumbnail assinada
+          loadThumbnail(card, fileId, file.name);
 
           card.addEventListener("click", () => {
             // Verifica se já está em processo de download
