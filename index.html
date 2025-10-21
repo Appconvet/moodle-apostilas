@@ -64,7 +64,7 @@
         font-size: 14px;
         font-weight: 500;
         margin-bottom: 8px;
-        white-space: nowrap;
+        /*white-space: nowrap;*/
         overflow: hidden;
         text-overflow: ellipsis;
       }
@@ -382,21 +382,23 @@
 
       async function loadThumbnail(card, fileId, fileName) {
         try {
-          const response = await fetch(`${baseUrl}thumbnail`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ fileId: fileId }),
-          });
-
-          const data = await response.json();
-
-          if (data[0] && data[0].thumbnailUrl) {
-            const thumbnailDiv = card.querySelector(".thumbnail");
-            thumbnailDiv.innerHTML = `<img src="${data[0].thumbnailUrl}" alt="${fileName}" 
+          // requisicao ao n8n - get thumb
+          // const response = await fetch(`${baseUrl}thumbnail`, {
+          //   method: "POST",
+          //   headers: {
+          //     "Content-Type": "application/json",
+          //   },
+          //   body: JSON.stringify({ fileId: fileId }),
+          // });
+          // const data = await response.json();
+          // if (data[0] && data[0].thumbnailUrl) {
+          //   const thumbnailDiv = card.querySelector(".thumbnail");
+          //   thumbnailDiv.innerHTML = `<img src="${data[0].thumbnailUrl}" alt="${fileName}"
+          //       onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\"pdf-icon\"></div>`;
+          // }
+          const thumbnailDiv = card.querySelector(".thumbnail");
+          thumbnailDiv.innerHTML = `<img src="./folder.png" alt="${fileName}" 
                 onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\"pdf-icon\"></div>`;
-          }
         } catch (error) {
           console.warn("Erro ao carregar thumbnail:", error);
         }
