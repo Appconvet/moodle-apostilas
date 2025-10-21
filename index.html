@@ -382,23 +382,28 @@
 
       async function loadThumbnail(card, fileId, fileName) {
         try {
-          // requisicao ao n8n - get thumb
-          // const response = await fetch(`${baseUrl}thumbnail`, {
-          //   method: "POST",
-          //   headers: {
-          //     "Content-Type": "application/json",
-          //   },
-          //   body: JSON.stringify({ fileId: fileId }),
-          // });
-          // const data = await response.json();
-          // if (data[0] && data[0].thumbnailUrl) {
-          //   const thumbnailDiv = card.querySelector(".thumbnail");
-          //   thumbnailDiv.innerHTML = `<img src="${data[0].thumbnailUrl}" alt="${fileName}"
-          //       onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\"pdf-icon\"></div>`;
-          // }
-          const thumbnailDiv = card.querySelector(".thumbnail");
-          thumbnailDiv.innerHTML = `<img src="./folder.png" alt="${fileName}" 
-                onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\"pdf-icon\"></div>`;
+          const response = await fetch(`${baseUrl}thumbnail`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ fileId }),
+          });
+
+          const data = await response.json();
+          if (data[0]) {
+            // Verifica se a URL é vazia ou indefinida e define a imagem padrão
+            const thumbnailUrl =
+              data[0].thumbnailUrl && data[0].thumbnailUrl.trim() !== ""
+                ? data[0].thumbnailUrl
+                : "./folder.png";
+
+            const thumbnailDiv = card.querySelector(".thumbnail");
+            thumbnailDiv.innerHTML = `
+        <img src="${thumbnailUrl}" alt="${fileName}"
+          onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=&quot;pdf-icon&quot;></div>';">
+      `;
+          }
         } catch (error) {
           console.warn("Erro ao carregar thumbnail:", error);
         }
